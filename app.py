@@ -151,10 +151,36 @@ if file_curr is not None and file_prev is not None:
 else:
     st.info("請上傳「本月」與「上月」的報表檔案，以上鎖定分析按鈕。")
 
+# ... 前面是 m1, m2, m3, m4 的指標區塊 ...
+            
+            # 推估明細與最終預測
+            st.subheader("🔮 月底預估與推算")
+            
+            col_info, col_result = st.columns([1, 1])
+            
+            with col_info:
+                st.markdown(f"""
+                **📌 數據推算邏輯**
+                * **營收預算 (未稅)**： **${TARGET_REVENUE:,}**
+                * **日均增推算**： {this_month}/1 ~ {rolling_day} (均增 {raw_daily_avg:.1f} * {ADJUSTMENT_FACTOR} = {raw_daily_avg*ADJUSTMENT_FACTOR:.1f} ➔ 取 **{final_daily_avg}**)
+                * **未來單數預估**： 日均增 {final_daily_avg} * 剩 {remaining_days} 天 * 客單價 ${UNIT_PRICE}。
+                * 推估 {this_month}/{rolling_day+1} ~ {total_days_in_month} 將累積新增 **{est_future_new}** 單、續訂約 **{est_future_renew}** 單。
+                """)
 
+            with col_result:
+                st.info(f"""
+                **🏆 最終預估達成**
+                
+                * 已扣款： **${current_rev_gross:,}**
+                * 未來預估： **${future_rev_est:,}**
+                * 總額： **${total_rev_gross_est:,}**
+                
+                **回除 {TAX_RATE} 稅率預估未稅營收： ${total_rev_net_est:,.0f}**
+                
+                ### 👉 預估達成率： {final_achievement_rate:.0f}%
+                """)
 
-
-# --- 4. 文字版執行結果 (方便複製) ---
+            # --- 4. 文字版執行結果 (方便複製) ---
             st.divider()
             st.subheader("📝 執行結果明細 (可直接複製報告)")
             
@@ -163,12 +189,17 @@ else:
             
             # 將所有 print 內容整理成一個多行字串
             report_text = f"""{this_month}月營收預算  ${TARGET_REVENUE:,}
-截至{this_month}/{rolling_day}營收 $ {current_rev_gross:,}(已扣款)
-{this_month}/1~{rolling_day} (均增 {adj_str} 位)
-【日均增 {final_daily_avg}*剩{remaining_days}天*${UNIT_PRICE}】，推估{this_month}/{rolling_day+1}~{total_days_in_month} 累積新增 {est_future_new}單、續訂約 {est_future_renew}單
-${current_rev_gross:,} + ${future_rev_est:,}= ${total_rev_gross_est:,}
-回除{TAX_RATE}稅率={total_rev_gross_est:,}/{TAX_RATE}={total_rev_net_est:,.0f}
-預估達成率 {final_achievement_rate:.0f}%"""
+            截至{this_month}/{rolling_day}營收 $ {current_rev_gross:,}(已扣款)
+            {this_month}/1~{rolling_day} (均增 {adj_str} 位)
+            【日均增 {final_daily_avg}*剩{remaining_days}天*${UNIT_PRICE}】，推估{this_month}/{rolling_day+1}~{total_days_in_month} 累積新增 {est_future_new}單、續訂約 {est_future_renew}單
+            ${current_rev_gross:,} + ${future_rev_est:,}= ${total_rev_gross_est:,}
+            回除{TAX_RATE}稅率={total_rev_gross_est:,}/{TAX_RATE}={total_rev_net_est:,.0f}預估達成率 {final_achievement_rate:.0f}%"""
 
             # 用 st.code 呈現，右上角會自動自帶一個「複製」按鈕
             st.code(report_text, language="text")
+
+        except Exception as e:
+            st.error(f"分析過程中發生錯誤：{e}")
+            st.warning("請確認上傳的 Excel 檔案格式與原本的 report_supplier 結構相符。")
+else:
+    st.info("請上傳「本月」與「上月」的報表檔案，以解鎖分析按鈕。")
